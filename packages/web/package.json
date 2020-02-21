@@ -34,7 +34,6 @@
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@angular/service-worker": "^9.0.0",
     "@angular-devkit/architect": "~0.900.1",
     "@angular-devkit/build-optimizer": "~0.900.1",
     "@angular-devkit/build-webpack": "~0.900.1",

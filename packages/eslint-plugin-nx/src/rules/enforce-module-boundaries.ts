@@ -8,7 +8,7 @@ import {
   hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isCircular,
+  checkCircularPath,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -169,14 +169,16 @@ export default createESLintRule<Options, MessageIds>({
 
         // check constraints between libs and apps
         // check for circular dependency
-        if (isCircular(projectGraph, sourceProject, targetProject)) {
+        const circularPath = checkCircularPath(projectGraph, sourceProject, targetProject);
+        if (circularPath.length !== 0) {
           context.report({
             node,
             messageId: 'noCircularDependencies',
             data: {
               sourceProjectName: sourceProject.name,
               targetProjectName: targetProject.name,
-            },
+              circularPath: circularPath
+            }
           });
           return;
         }

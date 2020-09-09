@@ -16,6 +16,8 @@ jest.mock('@nrwl/workspace/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 
+debugger
+
 const tsconfig = {
   compilerOptions: {
     baseUrl: '.',
@@ -76,7 +78,7 @@ describe('Enforce Module Boundaries', () => {
     vol.fromJSON(fileSys, '/root');
   });
 
-  it('should not error when everything is in order', () => {
+  xit('should not error when everything is in order', () => {
     const failures = runRule(
       { allow: ['@mycompany/mylib/deep'] },
       `${process.cwd()}/proj/apps/myapp/src/main.ts`,
@@ -124,7 +126,7 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should handle multiple projects starting with the same prefix properly', () => {
+  xit('should handle multiple projects starting with the same prefix properly', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/apps/myapp/src/main.ts`,
@@ -177,7 +179,7 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
-  describe('depConstraints', () => {
+  xdescribe('depConstraints', () => {
     const graph = {
       nodes: {
         apiName: {
@@ -378,7 +380,7 @@ describe('Enforce Module Boundaries', () => {
     });
   });
 
-  describe('relative imports', () => {
+  xdescribe('relative imports', () => {
     it('should not error when relatively importing the same library', () => {
       const failures = runRule(
         {},
@@ -512,7 +514,7 @@ describe('Enforce Module Boundaries', () => {
     });
   });
 
-  it('should error on absolute imports into libraries without using the npm scope', () => {
+  xit('should error on absolute imports into libraries without using the npm scope', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -544,7 +546,7 @@ describe('Enforce Module Boundaries', () => {
     );
   });
 
-  it('should respect regexp in allow option', () => {
+  xit('should respect regexp in allow option', () => {
     const failures = runRule(
       { allow: ['^.*/utils/.*$'] },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -582,7 +584,7 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should error on importing a lazy-loaded library', () => {
+  xit('should error on importing a lazy-loaded library', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -628,7 +630,7 @@ describe('Enforce Module Boundaries', () => {
     );
   });
 
-  it('should error on importing an app', () => {
+  xit('should error on importing an app', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -664,7 +666,7 @@ describe('Enforce Module Boundaries', () => {
     expect(failures[0].message).toEqual('Imports of apps are forbidden');
   });
 
-  it('should error when circular dependency detected', () => {
+  xit('should error when circular dependency detected', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/anotherlib/src/main.ts`,
@@ -803,7 +805,7 @@ describe('Enforce Module Boundaries', () => {
     );
   });
 
-  describe('buildable library imports', () => {
+  xdescribe('buildable library imports', () => {
     it('should ignore the buildable library verification if the enforceBuildableLibDependency is set to false', () => {
       const failures = runRule(
         {

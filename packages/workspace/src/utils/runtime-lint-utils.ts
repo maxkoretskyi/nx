@@ -146,33 +146,114 @@ export function findProjectUsingImport(
   return projectGraph.nodes[target];
 }
 
-export function isCircular(
+export function checkCircularPath(
   graph: ProjectGraph,
   sourceProject: ProjectGraphNode,
   targetProject: ProjectGraphNode
-): boolean {
-  if (!graph.nodes[targetProject.name]) return false;
-  return isDependingOn(graph, targetProject.name, sourceProject.name);
+): Array<any> {
+  if (!graph.nodes[targetProject.name]) return [];
+  return getPath(graph, targetProject.name, sourceProject.name);
 }
 
-function isDependingOn(
-  graph: ProjectGraph,
-  sourceProjectName: string,
-  targetProjectName: string,
-  done: { [projectName: string]: boolean } = {}
-): boolean {
-  if (done[sourceProjectName]) return false;
-  if (!graph.dependencies[sourceProjectName]) return false;
-  return graph.dependencies[sourceProjectName]
-    .map((dep) =>
-      dep.target === targetProjectName
-        ? true
-        : isDependingOn(graph, dep.target, targetProjectName, {
-            ...done,
-            [`${sourceProjectName}`]: true,
-          })
-    )
-    .some((result) => result);
+let reach = {
+  graph: null,
+  matrix: null,
+  nameToIndexMap: {},
+  indexToNameMap: {},
+  adjList: null
+};
+
+function buildMatrix(graph) {
+  const dependencies = graph.dependencies;
+  const nodes = Object.keys(graph.nodes).filter(s => !s.includes('npm:'));
+  const nameToIndexMap = {};
+  const indexToNameMap = {};
+  const adjList = new Array(nodes.length);
+  const matrix = new Array(nodes.length);
+
+  nodes.forEach((value, index) => {
+    nameToIndexMap[value] = index;
+    indexToNameMap[index] = value;
+  });
+
+  for (let i = 0; i < nodes.length; i++) {
+    adjList[i] = [];
+    matrix[i] = new Array(nodes.length).fill(0);
+  }
+
+  for (let proj in dependencies) {
+    const u = nameToIndexMap[proj];
+    for (let dep of dependencies[proj]) {
+      const v = nameToIndexMap[dep.target];
+      if (v !== undefined) {
+        adjList[u].push(v);
+      }
+    }
+  }
+
+  const traverse = (s, v) => {
+    matrix[s][v] = 1;
+
+    for (let adj of adjList[v]) {
+      if (matrix[s][adj] === 0) {
+        traverse(s, adj);
+      }
+    }
+  };
+
+  for (let i = 0; i < nodes.length; i++) {
+    traverse(i, i);
+  }
+
+  return {
+    matrix,
+    nameToIndexMap,
+    indexToNameMap,
+    adjList,
+  };
+}
+
+function getPath(graph, sourceProjectName, targetProjectName) {
+  if (reach.graph !== graph) {
+    const result = buildMatrix(graph);
+    reach.matrix = result.matrix;
+    reach.nameToIndexMap = result.nameToIndexMap;
+    reach.indexToNameMap = result.indexToNameMap;
+    reach.graph = graph;
+    reach.adjList = result.adjList;
+  }
+
+  const adjList = reach.adjList;
+  const path = [];
+  if (sourceProjectName === targetProjectName) return path;
+
+  const src = reach.nameToIndexMap[sourceProjectName];
+  const dest = reach.nameToIndexMap[targetProjectName];
+
+  let next = src;
+
+  while (next !== null) {
+    if (next === dest) break;
+
+    let current = next;
+    next = null;
+
+    for (let adj of adjList[current]) {
+      if (reach.matrix[adj][dest] === 1) {
+        path.push(adj);
+        next = adj;
+        break;
+      }
+    }
+  }
+
+  const mapped = path.map((i) => reach.indexToNameMap[i]);
+
+  if (mapped.length > 0) {
+    mapped.unshift(sourceProjectName);
+  }
+
+  return mapped;
 }
 
 export function findConstraintsFor(
